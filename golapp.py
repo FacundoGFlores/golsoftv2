@@ -6,19 +6,25 @@
 # Licencia: GNU/GPL V3 http://www.gnu.org/copyleft/gpl.html
 # Estado: Produccion
 
-from traits.api import HasTraits, Str, Range, Enum, Bool, Instance
-from traitsui.api import Item, Group, View, Handler, Label
+from traits.api import HasTraits, Str, Range, Enum, Bool, Instance, PrototypedFrom, on_trait_change
+from traitsui.api import Item, HSplit, Group, View, Handler, Label
 
 from src.models.datainput_model import Datainput_model
 from src.models.extradata_model import Extradata_model
+from src.models.overview_model import Overview_model
 
 
 class Golapp(HasTraits):
     """ Aplicacion principal, la cual incorpora las diferentes vistas
         definidas dentro de los modelos.
     """
-    datainput = Instance(Datainput_model)
-    extradata = Instance(Extradata_model)
+    datainput = Instance(Datainput_model, ())
+    extradata = Instance(Extradata_model, ())
+    overview = Instance(Overview_model, ())
+
+    btn_update_hologram = PrototypedFrom('datainput')
+    camera = PrototypedFrom('extradata')
+    overview_vismode = PrototypedFrom('overview')
 
     grp_datainput = Group(
         Group(
@@ -37,18 +43,31 @@ class Golapp(HasTraits):
         show_border=True
     )
 
-    view = View(
+    grp_overview = Group(
         Group(
-            grp_datainput,
-            grp_extradata
+            Item(name='overview', style='custom')
+        ),
+        label='Overview',
+        show_border=True
+    )
+
+    view = View(
+        HSplit(
+            grp_overview,
+            Group(
+                grp_datainput,
+                grp_extradata
+            )
         ),
         title='Golsoft App v2',
         resizable=True,
     )
 
+    @on_trait_change("btn_update_hologram")
+    def print_camera(self):
+        print "Golapp printing: %s" % self.camera
+        print "Golapp printing: %s" % self.overview_vismode
+
 if __name__ == '__main__':
-    golapp = Golapp(
-        datainput=Datainput_model(),
-        extradata=Extradata_model()
-    )
+    golapp = Golapp()
     golapp.configure_traits()

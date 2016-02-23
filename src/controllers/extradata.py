@@ -19,7 +19,10 @@ class ExtradataHandler(Handler):
     """ Controlador para el ModelView: Extradata
     """
     def object_camera_changed(self, info):
-        print info.object.camera
+        print "Using camera: %s" % info.object.camera
+
+    def object_wavelength_changed(self, info):
+        print "Using wavelength: %s" % info.object.wavelength
 
     def load_cameras(self):
         cp = ConfigParser()

@@ -9,8 +9,8 @@
 from traitsui.api import Handler
 
 
-class DatainputHandler(Handler):
-    """ Controlador para el ModelView: Datainput
+class OverviewHandler(Handler):
+    """ Controlador para el ModelView: Overview
     """
-    def object_holo_filename_changed(self, info):
-        print "Using hologram %s:" % info.object.holo_filename
+    def object_overview_vismode_changed(self, info):
+        print "Using vismode: %s" % info.object.overview_vismode
