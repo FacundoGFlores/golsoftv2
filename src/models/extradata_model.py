@@ -21,7 +21,8 @@ class Extradata_model(HasTraits):
     hnd_extra = ExtradataHandler()
     camera = hnd_extra.load_cameras()
     wavelength = hnd_extra.load_wavelengths()
-    wavelength_nm = Range(400., 750., 650., mode="xslider", enter_set=True,
+    # Se utiliza un spinner para mayor precision que el xslider
+    wavelength_nm = Range(400., 750., 650., mode="spinner", enter_set=True,
         auto_set=False)
     imagecolor = Color("(0,0,0)")
     imagewavelength = Int(0)
