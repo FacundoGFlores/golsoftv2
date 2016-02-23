@@ -36,8 +36,9 @@ class Overview_model(HasTraits):
         show_label=False
     )
 
+    # Se opta por show_label=False para ganar mas espacio en el overview
     grp_overview_visualizer = Group(
-        Item('overview_vismode', style='simple', show_label=True),
+        Item('overview_vismode', style='simple', show_label=False),
         vis_overview,
     )
 

@@ -7,7 +7,7 @@
 # Estado: Produccion
 
 from traits.api import HasTraits, Str, Range, Enum, Bool, Instance, PrototypedFrom, on_trait_change
-from traitsui.api import Item, HSplit, Group, View, Handler, Label
+from traitsui.api import Item, HSplit, Group, View, Handler, Label, Tabbed
 
 from src.models.datainput_model import Datainput_model
 from src.models.extradata_model import Extradata_model
@@ -45,19 +45,22 @@ class Golapp(HasTraits):
 
     grp_overview = Group(
         Group(
-            Item(name='overview', style='custom')
+            Item(name='overview', style='custom', show_label=False)
         ),
-        label='Overview',
-        show_border=True
+        show_border=True,
     )
 
+    info_panel = Tabbed(
+        Group(
+            grp_datainput,
+            grp_extradata
+        ),
+        label="Data"
+    )
     view = View(
         HSplit(
             grp_overview,
-            Group(
-                grp_datainput,
-                grp_extradata
-            )
+            info_panel
         ),
         title='Golsoft App v2',
         resizable=True,
