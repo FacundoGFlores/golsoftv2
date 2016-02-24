@@ -8,7 +8,7 @@
 
 from ConfigParser import ConfigParser
 
-from traits.api import Color, HasTraits, Int, Instance, Range
+from traits.api import Bool, Button, Color, HasTraits, Int, Instance, Range
 from traitsui.api import Group, HGroup, Handler, Item, View
 
 from ..controllers.extradata import ExtradataHandler
@@ -27,15 +27,38 @@ class Extradata_model(HasTraits):
     imagecolor = Color("(0,0,0)")
     imagewavelength = Int(0)
 
+    use_sampled_image = Bool(True)
+    btn_load_parameters = Button("Load")
+    btn_save_parameters = Button("Save")
+
     grp_extradata = Group(
         "camera",
         HGroup(
-            Item("imagecolor", style='readonly', label="Color Dominante"),
-            Item("imagewavelength", style="readonly",
-                label="Wavelength dominante"),
+            Item(
+                "imagecolor",
+                style='readonly',
+                label="Color Dominante"
+            ),
+            Item(
+                "imagewavelength",
+                style="readonly",
+                label="Wavelength dominante"
+            )
         ),
         "wavelength",
-        "wavelength_nm"
+        "wavelength_nm",
+        HGroup(
+            "use_sampled_image",
+            "-",
+            Item(
+                "btn_save_parameters",
+                label="Parameters"
+            ),
+            Item(
+                "btn_load_parameters",
+                show_label=False
+            )
+        )
     )
 
     view_extradata = View(

@@ -12,7 +12,6 @@ from traitsui.api import Handler
 
 from ..controllers.datainput import DatainputHandler
 
-
 class Datainput_model(HasTraits):
     """ ModelView para el manejo de datos de los hologramas:
         Archivos de imagenes.
@@ -39,6 +38,9 @@ class Datainput_model(HasTraits):
         grp_datainput,
         handler=DatainputHandler
     )
+
+    def get_holo_filename(self):
+        return self.get_holo_filename
 
 if __name__ == '__main__':
     m = DataInput_Model()
