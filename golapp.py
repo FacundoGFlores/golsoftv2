@@ -6,7 +6,7 @@
 # Licencia: GNU/GPL V3 http://www.gnu.org/copyleft/gpl.html
 # Estado: Produccion
 
-from traits.api import HasTraits, Str, Range, Enum, Bool, Instance, PrototypedFrom, on_trait_change
+from traits.api import Float, HasTraits, Str, Range, Enum, Bool, Instance, PrototypedFrom, on_trait_change
 from traitsui.api import Item, HSplit, Group, View, Handler, Label, Tabbed
 import numpy as np
 
@@ -25,6 +25,8 @@ class Golapp(HasTraits):
 
     def __init__(self):
         HasTraits.__init__(self)
+        self.dx = Float()
+        self.dy = Float()
         self.empty = None
         self.img_holo = None
         self.img_ref = None
@@ -212,6 +214,15 @@ class Golapp(HasTraits):
         self.hologram = subtract(self.hologram, self.img_obj)
         self.hologram = equalize(self.hologram)
         self.update_overview_vis()
+
+    @on_trait_change("edata.camera")
+    def update_camera(self):
+        camera = self.edata.cameras[self.edata.camera]
+        self.dx = eval(camera["dx"])
+        self.dy = eval(camera["dy"])
+        print self.dx, self.dy
+        # TODO: Se debe establecer el tab para opciones de propagacion.
+        # self.update_propagation()
 
 if __name__ == '__main__':
     golapp = Golapp()

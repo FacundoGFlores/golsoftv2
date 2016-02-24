@@ -18,9 +18,11 @@ class Extradata_model(HasTraits):
     """ ModelView para el manejo de datos extra de los hologramas:
         Camaras y Wavelength
     """
+    cameras = {}
+    wavelengths = {}
     hnd_extra = ExtradataHandler()
-    camera = hnd_extra.load_cameras()
-    wavelength = hnd_extra.load_wavelengths()
+    camera = hnd_extra.load_cameras(cameras)
+    wavelength = hnd_extra.load_wavelengths(wavelengths)
     # Se utiliza un spinner para mayor precision que el xslider
     wavelength_nm = Range(400., 750., 650., mode="spinner", enter_set=True,
         auto_set=False)

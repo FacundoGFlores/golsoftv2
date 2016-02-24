@@ -24,22 +24,23 @@ class ExtradataHandler(Handler):
     def object_wavelength_changed(self, info):
         print "Using wavelength: %s" % info.object.wavelength
 
-    def load_cameras(self):
+    def load_cameras(self, cameras):
         cp = ConfigParser()
         try:
             with open(CAM_PATH) as cam_file:
                 cp.readfp(cam_file)
         except IOError:
             print "Error leyendo el archivo de camaras"
-        cameras = {}
         for section in cp.sections():
             cameras[section] = dict(cp.items(section))
         if cameras:
-            return Enum(cameras.keys(), label="Camera")
+            camera = Enum(cameras.keys(), label="Camera")
+            return camera
         else:
-            return Enum("No hay camaras disponibles", label="Camera")
+            camera = Enum("No hay camaras disponibles", label="Camera")
+            return camera
 
-    def load_wavelengths(self):
+    def load_wavelengths(self, wavelengths):
         cp = ConfigParser()
         try:
             with open(WAV_PATH) as cam_file:
@@ -50,6 +51,11 @@ class ExtradataHandler(Handler):
         if wavelengths:
             wavelengths = ["Custom"] + [
                 "%s - %s" % (w, k) for k, w in wavelengths.items()]
-            return Enum(wavelengths, label="Wavelength")
+            wavelength = Enum(wavelengths, label="Wavelength")
+            return wavelength
         else:
-            return Enum("No hay wavelengths disponibles", label="Wavelengths")
+            wavelength = Enum(
+                "No hay wavelengths disponibles",
+                label="Wavelengths"
+            )
+            return wavelength
