@@ -17,6 +17,7 @@ from lib.color import guess_wavelength
 from src.models.datainput_model import Datainput_model
 from src.models.extradata_model import Extradata_model
 from src.models.overview_model import Overview_model
+from src.models.propagation_model import Propagation_model
 
 class Golapp(HasTraits):
     """ Aplicacion principal, la cual incorpora las diferentes vistas
@@ -42,6 +43,7 @@ class Golapp(HasTraits):
     idata = Instance(Datainput_model, ())
     edata = Instance(Extradata_model, ())
     oview = Instance(Overview_model, ())
+    propa = Instance(Propagation_model, ())
 
     grp_datainput = Group(
         Group(
@@ -68,6 +70,13 @@ class Golapp(HasTraits):
         show_border=True,
     )
 
+    grp_propagation = Group(
+        Group(
+            Item(name='propa', style='custom', show_label=False)
+        ),
+        show_border=True,
+    )
+
     info_panel = Tabbed(
         Group(
             grp_datainput,
@@ -75,10 +84,21 @@ class Golapp(HasTraits):
         ),
         label="Data"
     )
+
+    propagation_panel = Tabbed(
+        Group(
+            grp_propagation
+        ),
+        label="Propagation"
+    )
+
     view = View(
         HSplit(
             grp_overview,
-            info_panel
+            Tabbed(
+                info_panel,
+                propagation_panel
+            )
         ),
         title='Golsoft App v2',
         resizable=True,
