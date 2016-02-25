@@ -18,6 +18,8 @@ from src.models.datainput_model import Datainput_model
 from src.models.extradata_model import Extradata_model
 from src.models.overview_model import Overview_model
 from src.models.propagation_model import Propagation_model
+from src.models.mask_model import Mask_model
+
 
 class Golapp(HasTraits):
     """ Aplicacion principal, la cual incorpora las diferentes vistas
@@ -44,6 +46,7 @@ class Golapp(HasTraits):
     edata = Instance(Extradata_model, ())
     oview = Instance(Overview_model, ())
     propa = Instance(Propagation_model, ())
+    imask = Instance(Mask_model, ())
 
     grp_datainput = Group(
         Group(
@@ -77,12 +80,26 @@ class Golapp(HasTraits):
         show_border=True,
     )
 
+    grp_mask = Group(
+        Group(
+            Item(name='imask', style='custom', show_label=False)
+        ),
+        show_border=True
+    )
+
     info_panel = Tabbed(
         Group(
             grp_datainput,
             grp_extradata
         ),
         label="Data"
+    )
+
+    mask_panel = Tabbed(
+        Group(
+            grp_mask
+        ),
+        label="Mask Espectrum"
     )
 
     propagation_panel = Tabbed(
@@ -97,6 +114,7 @@ class Golapp(HasTraits):
             grp_overview,
             Tabbed(
                 info_panel,
+                mask_panel,
                 propagation_panel
             )
         ),

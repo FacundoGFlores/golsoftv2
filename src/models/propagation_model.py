@@ -26,13 +26,13 @@ class Propagation_model(HasTraits):
 
     distance_m = Range(
         -0.50, 0.50, 0.,
-        mode="spinner",
+        mode="auto",
         enter_set=True,
         auto_set=False
     )
     distance_cm = Range(
         -5., 5., 0.,
-        mode="spinner",
+        mode="auto",
         enter_set=True,
         auto_set=False
     )
