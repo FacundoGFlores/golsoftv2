@@ -8,6 +8,7 @@
 
 from traits.api import Float, HasTraits, Str, Range, Enum, Bool, Instance, PrototypedFrom, on_trait_change
 from traitsui.api import Item, HSplit, Group, View, Handler, Label, Tabbed
+
 import numpy as np
 
 from lib.image import equalize, imread, normalize, subtract, phase_denoise
@@ -215,7 +216,7 @@ class Golapp(HasTraits):
 
     def update_objimage(self):
         if self.idata.obj_filename:
-            print("Updating object image")
+            print "Updating object image"
 
             image = imread(self.idata.obj_filename)
 
@@ -254,7 +255,7 @@ class Golapp(HasTraits):
     @on_trait_change("oview.overview_vismode")
     def update_overview_vis(self):
         vismode = self.oview.overview_vismode
-        rep_type = "image"
+        self.rep_type = "image"
         options = {
             "input map": self.opt_inputmap,
             "spectrum": self.opt_spectrum,
@@ -266,7 +267,7 @@ class Golapp(HasTraits):
         # Do the switch
         options[vismode]()
 
-        if rep_type == "image":
+        if self.rep_type == "image":
             if self.oview.plt_overview_surf:
                 self.oview.plt_overview_surf.visible = False
 
@@ -283,11 +284,12 @@ class Golapp(HasTraits):
                 self.oview.plt_overview.mlab_source.lut_type = self.color
                 self.oview.plt_overview.mlab_source.scalars = self.array
         else:
+            print "Entered else"
             warp_scale = 100 / self.array.ptp()
-            if self.plt_overview:
-                self.plt_overview.visible = False
+            if self.oview.plt_overview:
+                self.oview.plt_overview.visible = False
 
-            if self.plt_overview_surf is None:
+            if self.oview.plt_overview_surf is None:
                 print("Creating new surface")
 
                 self.oview.plt_overview_surf = \
@@ -295,7 +297,7 @@ class Golapp(HasTraits):
                     self.array,
                     colormap=self.color,
                     warp_scale=warp_scale,
-                    figure=self.scn_overview.mayavi_scene
+                    figure=self.oview.scn_overview.mayavi_scene
                 )
             else:
                 self.oview.plt_overview_surf.visible = True
@@ -370,7 +372,6 @@ class Golapp(HasTraits):
                 self.zero_scale,
                 self.cuttop
             )
-            print "MASK, MASKED, CNT"
             self.update_propagation()
             self.update_mask_vis()
             self.update_overview_vis()
