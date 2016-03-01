@@ -7,8 +7,8 @@
 # Estado: Produccion
 
 from traitsui.api import Handler
-from lib.image import equalize, imread, normalize, subtract, phase_denoise
 
+from lib.image import equalize, imread, normalize, phase_denoise, subtract
 
 
 class OverviewHandler(Handler):

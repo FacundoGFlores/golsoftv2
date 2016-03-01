@@ -8,8 +8,8 @@
 
 from ConfigParser import ConfigParser
 
-from traits.api import Bool, Button, Color, HasTraits, Int, Instance, Range
-from traitsui.api import Group, HGroup, Handler, Item, View
+from traits.api import Bool, Button, Color, HasTraits, Instance, Int, Range
+from traitsui.api import Group, Handler, HGroup, Item, View
 
 from ..controllers.extradata import ExtradataHandler
 

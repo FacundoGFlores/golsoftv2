@@ -10,9 +10,8 @@ from mayavi.core.api import PipelineBase
 from mayavi.core.ui.api import SceneEditor
 from mayavi.core.ui.mayavi_scene import MayaviScene
 from mayavi.tools.mlab_scene_model import MlabSceneModel
-
-from traits.api import HasTraits, Bool, Button, Float, Range, Enum, Instance
-from traitsui.api import Item, Group, View
+from traits.api import Bool, Button, Enum, Float, HasTraits, Instance, Range
+from traitsui.api import Group, Item, View
 
 from ..controllers.propagation import PropagationHandler
 

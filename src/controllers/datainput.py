@@ -7,9 +7,11 @@
 # Estado: Produccion
 
 from traitsui.api import Handler
-from lib.image import equalize, imread, normalize, subtract, phase_denoise
-from lib.image import limit_size
+
 from lib.color import guess_wavelength
+from lib.image import (equalize, imread, limit_size, normalize, phase_denoise,
+                       subtract)
+
 
 class DatainputHandler(Handler):
     """ Controlador para el ModelView: Datainput

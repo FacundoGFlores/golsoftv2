@@ -6,10 +6,11 @@
 # Licencia: GNU/GPL V3 http://www.gnu.org/copyleft/gpl.html
 # Estado: Produccion
 
-from traits.api import HasTraits, Button, File, CList, Instance, PrototypedFrom
-from traitsui.api import View, Item, Group
+from traits.api import Button, CList, File, HasTraits, Instance, PrototypedFrom
+from traitsui.api import Group, Item, View
 
 from ..controllers.datainput import DatainputHandler
+
 
 class Datainput_model(HasTraits):
     """ ModelView para el manejo de datos de los hologramas:
