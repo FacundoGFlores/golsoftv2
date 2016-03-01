@@ -6,7 +6,8 @@
 # Licencia: GNU/GPL V3 http://www.gnu.org/copyleft/gpl.html
 # Estado: Produccion
 
-from traits.api import Float, HasTraits, Str, Range, Enum, Bool, Instance, PrototypedFrom, on_trait_change
+from traits.api import Float, HasTraits, Str, Range, Enum, Bool
+from traits.api import Instance, PrototypedFrom, on_trait_change
 from traitsui.api import Item, HSplit, Group, View, Handler, Label, Tabbed
 
 import numpy as np
@@ -34,6 +35,7 @@ from src.models.refbeam_model import Refbeam_model
 
 tau = 2 * np.pi
 
+
 class Golapp(HasTraits):
     """ Aplicacion principal, la cual incorpora las diferentes vistas
         definidas dentro de los modelos.
@@ -50,8 +52,8 @@ class Golapp(HasTraits):
         self.img_obj = None
         self.rgb_color = None
         self.hologram = None
-        self.array = None # Actual array for showing in mayavi
-        self.color = None # Actual color for showing in mayavi
+        self.array = None  # Actual array for showing in mayavi
+        self.color = None  # Actual color for showing in mayavi
         self.resolution_limit = .5
         self.wavelength = None
         self.rgbcolor = None
@@ -251,7 +253,6 @@ class Golapp(HasTraits):
         self.color = "spectral"
         self.rep_type = "surface"
 
-
     @on_trait_change("oview.overview_vismode")
     def update_overview_vis(self):
         vismode = self.oview.overview_vismode
@@ -285,7 +286,7 @@ class Golapp(HasTraits):
                 self.oview.plt_overview.mlab_source.scalars = self.array
         else:
             print "Entered else"
-            warp_scale = 100 / self.array.ptp()
+            wrp_scale = 100 / self.array.ptp()
             if self.oview.plt_overview:
                 self.oview.plt_overview.visible = False
 
@@ -294,16 +295,16 @@ class Golapp(HasTraits):
 
                 self.oview.plt_overview_surf = \
                     self.oview.scn_overview.mlab.surf(
-                    self.array,
-                    colormap=self.color,
-                    warp_scale=warp_scale,
-                    figure=self.oview.scn_overview.mayavi_scene
-                )
+                        self.array,
+                        colormap=self.color,
+                        wrp_scale=wrp_scale,
+                        figure=self.oview.scn_overview.mayavi_scene
+                    )
             else:
                 self.oview.plt_overview_surf.visible = True
                 self.oview.plt_overview_surf.mlab_source.lut_type = self.color
                 self.oview.plt_overview_surf.mlab_source.scalars = self.array
-                self.oview.plt_overview_surf.mlab_source.warp_scale = warp_scale
+                self.oview.plt_overview_surf.mlab_source.wrp_scale = wrp_scale
 
     @on_trait_change("idata.btn_update_hologram")
     def update_hologram(self):
@@ -405,11 +406,12 @@ class Golapp(HasTraits):
             pass
 
         if self.propa.plt_propagation is None:
-            self.propa.plt_propagation = self.propa.scn_propagation.mlab.imshow(
-                self.array,
-                colormap=self.color,
-                figure=self.propa.scn_propagation.mayavi_scene
-            )
+            self.propa.plt_propagation = \
+                self.propa.scn_propagation.mlab.imshow(
+                    self.array,
+                    colormap=self.color,
+                    figure=self.propa.scn_propagation.mayavi_scene
+                )
         else:
             self.propa.plt_propagation.mlab_source.set(scalars=self.array)
 
@@ -499,7 +501,6 @@ class Golapp(HasTraits):
             )
             self.cos_alpha, self.cos_beta = cos_alpha, cos_beta
             self.irefb.cos_alpha, self.irefb.cos_beta = cos_alpha, cos_beta
-
 
     @on_trait_change(
         "irefb.cos_alpha, \
