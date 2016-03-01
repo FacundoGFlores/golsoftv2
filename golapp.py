@@ -15,6 +15,7 @@ from lib.autofocus import guess_focus_distance
 from lib.automask import get_auto_mask
 from lib.color import guess_wavelength
 from lib.dft import get_shifted_dft, get_shifted_idft
+from lib.extra import is_numpy_array
 from lib.image import (equalize, imread, limit_size, normalize, phase_denoise,
                        subtract)
 from lib.minimize import get_fitted_paraboloid
@@ -306,15 +307,20 @@ class Golapp(HasTraits):
 
     @on_trait_change("idata.btn_update_hologram")
     def update_hologram(self):
-        print "Calculatin hologram"
+        print "Calculating hologram"
         self.update_holoimage()
         self.update_refimage()
         self.update_objimage()
-        self.hologram = subtract(self.img_holo, self.img_ref)
-        self.hologram = subtract(self.hologram, self.img_obj)
-        self.hologram = equalize(self.hologram)
-        self.update_ref_beam()
-        self.update_overview_vis()
+        if is_numpy_array(self.img_holo) and is_numpy_array(self.img_holo):
+            self.hologram = subtract(self.img_holo, self.img_ref)
+        if is_numpy_array(self.img_holo) and is_numpy_array(self.img_obj):
+            self.hologram = subtract(self.hologram, self.img_obj)
+        if is_numpy_array(self.hologram):
+            self.hologram = equalize(self.hologram)
+            self.update_ref_beam()
+            self.update_overview_vis()
+        else:
+            print "No hologram available"
 
     @on_trait_change("edata.camera")
     def update_camera(self):
