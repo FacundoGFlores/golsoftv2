@@ -17,9 +17,11 @@ from lib.automask import get_auto_mask
 from lib.autofocus import guess_focus_distance
 from lib.propagation import get_propagation_array
 from lib.dft import get_shifted_idft, get_shifted_dft
+from lib.pea import calculate_director_cosines, get_refbeam
 from lib.pea import get_phase, get_module
 from lib.unwrap import unwrap_phasediff2
 from lib.unwrap import unwrap_qg, unwrap_wls, unwrap_cls, unwrap_pcg
+from lib.minimize import get_fitted_paraboloid
 
 from src.models.datainput_model import Datainput_model
 from src.models.extradata_model import Extradata_model
@@ -27,6 +29,7 @@ from src.models.overview_model import Overview_model
 from src.models.propagation_model import Propagation_model
 from src.models.mask_model import Mask_model
 from src.models.unwrap_model import Unwrap_model
+from src.models.refbeam_model import Refbeam_model
 
 tau = 2 * np.pi
 
@@ -37,8 +40,9 @@ class Golapp(HasTraits):
 
     def __init__(self):
         HasTraits.__init__(self)
-        self.dx = Float()
-        self.dy = Float()
+        self.empty = np.zeros((200, 200))
+        self.dx = None
+        self.dy = None
         self.empty = None
         self.img_holo = None
         self.img_ref = None
@@ -64,6 +68,7 @@ class Golapp(HasTraits):
         self.wrapped_phase = None
         self.phase_denoise = None
         self.unwrapped_phase = None
+        self.r_hologram = None
 
     idata = Instance(Datainput_model, ())
     edata = Instance(Extradata_model, ())
@@ -71,6 +76,7 @@ class Golapp(HasTraits):
     propa = Instance(Propagation_model, ())
     imask = Instance(Mask_model, ())
     iunwr = Instance(Unwrap_model, ())
+    irefb = Instance(Refbeam_model, ())
 
     grp_datainput = Group(
         Group(
@@ -118,6 +124,13 @@ class Golapp(HasTraits):
         show_border=True
     )
 
+    grp_refbeam = Group(
+        Group(
+            Item(name='irefb', style='custom', show_label=False)
+        ),
+        show_border=True
+    )
+
     info_panel = Tabbed(
         Group(
             grp_datainput,
@@ -147,11 +160,19 @@ class Golapp(HasTraits):
         label="Unwrapping"
     )
 
+    refbeam_panel = Tabbed(
+        Group(
+            grp_refbeam
+        ),
+        label="Refbeam"
+    )
+
     view = View(
         HSplit(
             grp_overview,
             Tabbed(
                 info_panel,
+                refbeam_panel,
                 mask_panel,
                 propagation_panel,
                 unwrap_panel
@@ -208,7 +229,8 @@ class Golapp(HasTraits):
         self.color = "bone"
 
     def opt_spectrum(self):
-        self.array = normalize(self.mask) + equalize(self.centered_spectrum)
+        print "Espectreando!!!"
+        self.array = normalize(self.mask) + equalize(self.cnt_spectrum)
         self.color = "gist_stern"
 
     def opt_module(self):
@@ -290,6 +312,7 @@ class Golapp(HasTraits):
         self.hologram = subtract(self.img_holo, self.img_ref)
         self.hologram = subtract(self.hologram, self.img_obj)
         self.hologram = equalize(self.hologram)
+        self.update_ref_beam()
         self.update_overview_vis()
 
     @on_trait_change("edata.camera")
@@ -315,7 +338,7 @@ class Golapp(HasTraits):
             self.imask.plt_mask = self.imask.scn_mask.mlab.imshow(
                 self.array,
                 colormap="gist_stern",
-                figure=self.scn_mask.mayavi_scene
+                figure=self.imask.scn_mask.mayavi_scene
             )
         else:
             self.imask.plt_mask.mlab_source.set(scalars=self.array)
@@ -324,13 +347,13 @@ class Golapp(HasTraits):
         "imask.use_masking, \
         imask.softness, \
         imask.radious_scale, \
-        imask.user_zero_mask, \
+        imask.use_zero_mask, \
         imask.zero_scale, \
         imask.use_cuttop, \
         imask.cuttop")
     def update_mask(self):
         if self.imask.use_masking:
-            print "Updating mask"
+            print "Using mask - Updating mask"
             if self.imask.use_zero_mask:
                 self.zero_scale = self.imask.zero_scale
             else:
@@ -347,10 +370,12 @@ class Golapp(HasTraits):
                 self.zero_scale,
                 self.cuttop
             )
-
+            print "MASK, MASKED, CNT"
+            self.update_propagation()
             self.update_mask_vis()
             self.update_overview_vis()
         else:
+            print "Not Using mask - Updating"
             self.masked_spectrum = self.spectrum
 
     @on_trait_change("propa.distance_m, propa.distance_cm")
@@ -359,7 +384,7 @@ class Golapp(HasTraits):
 
     @on_trait_change("btn_guess_focus")
     def guess_focus_distance(self):
-        self.wavelength = self.wavelength_nm * 1e-9
+        self.wavelength = self.edata.wavelength_nm * 1e-9
         self.masked_spectrum = get_auto_mask(self.spectrum)[1]
         self.distance = guess_focus_distance(
             self.masked_spectrum,
@@ -382,7 +407,7 @@ class Golapp(HasTraits):
             self.propa.plt_propagation = self.propa.scn_propagation.mlab.imshow(
                 self.array,
                 colormap=self.color,
-                figure=self.scn_propagation.mayavi_scene
+                figure=self.propa.scn_propagation.mayavi_scene
             )
         else:
             self.propa.plt_propagation.mlab_source.set(scalars=self.array)
@@ -398,11 +423,11 @@ class Golapp(HasTraits):
         else:
             pass
 
-        if self.plt_unwrapping is None:
-            self.plt_unwrapping = self.scn_propagation.mlab.imshow(
+        if self.iunwr.plt_unwrapping is None:
+            self.iunwr.plt_unwrapping = self.propa.scn_propagation.mlab.imshow(
                 self.array,
                 colormap=self.color,
-                figure=self.scn_unwrapping.mayavi_scene
+                figure=self.iunwr.scn_unwrapping.mayavi_scene
             )
         else:
             self.iunwr.plt_unwrapping.mlab_source.set(scalars=self.array)
@@ -436,15 +461,15 @@ class Golapp(HasTraits):
     @on_trait_change(
         "propa.propagation_vismode, \
         propa.distance, \
-        propa.wavelength_nm"
+        edata.wavelength_nm"
     )
     def update_propagation(self):
         if self.propa.use_propagation:
             print("Updating propagation")
             self.propagation_array = get_propagation_array(
                 self.hologram.shape,
-                self.distance,
-                self.wavelength_nm * 1e-9,
+                self.propa.distance,
+                self.edata.wavelength_nm * 1e-9,
                 (self.dx, self.dy)
             )
             self.propagated = self.propagation_array * self.masked_spectrum
@@ -453,11 +478,68 @@ class Golapp(HasTraits):
         self.reconstructed = get_shifted_idft(self.propagated)
         self.module = normalize(get_module(self.reconstructed))
         self.wrapped_phase = get_phase(self.reconstructed)
-        paraboloid = get_fitted_paraboloid(wrapped_phase)
-        self.wrapped_phase = (wrapped_phase - paraboloid) % tau
+        paraboloid = get_fitted_paraboloid(self.wrapped_phase)
+        self.wrapped_phase = (self.wrapped_phase - paraboloid) % tau
         self.update_propagation_vis()
         self.update_overview_vis()
         self.update_unwrapping_phase()
+
+    @on_trait_change(
+        "irefb.use_ref_beam, \
+        irefb.use_auto_angles, \
+        edata.wavelength_nm"
+    )
+    def calculate_director_cosines(self):
+        if self.irefb.use_ref_beam and self.irefb.use_auto_angles:
+            cos_alpha, cos_beta = calculate_director_cosines(
+                self.hologram,
+                self.edata.wavelength_nm * 1e-9,
+                (self.dx, self.dy)
+            )
+            self.cos_alpha, self.cos_beta = cos_alpha, cos_beta
+            self.irefb.cos_alpha, self.irefb.cos_beta = cos_alpha, cos_beta
+
+
+    @on_trait_change(
+        "irefb.cos_alpha, \
+        irefb.cos_beta, \
+        irefb.use_ref_beam, \
+        edata.wavelength_nm"
+    )
+    def update_ref_beam(self):
+        print "Getting ref beam"
+        if self.irefb.use_ref_beam:
+            print("Updating reference beam")
+            self.irefb.ref_beam = get_refbeam(
+                self.hologram.shape,
+                self.irefb.cos_alpha,
+                self.irefb.cos_beta,
+                self.edata.wavelength_nm * 1e-9,
+                (self.dx, self.dy))
+            self.r_hologram = self.irefb.ref_beam * self.irefb.hologram
+        else:
+            self.ref_beam = self.empty
+            self.r_hologram = self.hologram
+
+        self.spectrum = get_shifted_dft(self.r_hologram)
+        self.update_overview_vis()
+        self.update_mask()
+
+    @on_trait_change("irefb.ref_beam_vismode")
+    def update_ref_beam_vis(self):
+        if self.irefb.ref_beam_vismode == "hologram x":
+            self.array = get_module(self.r_hologram)
+        else:
+            self.array = self.ref_beam.real
+
+        if self.irefb.plt_ref_beam is None:
+            self.irefb.plt_ref_beam = self.irefb.scn_ref_beam.mlab.imshow(
+                self.array,
+                colormap="black-white",
+                figure=self.scn_ref_beam.mayavi_scene
+            )
+        else:
+            self.irefb.plt_ref_beam.mlab_source.set(scalars=self.array)
 
 if __name__ == '__main__':
     golapp = Golapp()

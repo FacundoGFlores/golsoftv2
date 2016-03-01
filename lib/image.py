@@ -301,8 +301,9 @@ def open_gdal(filename):
     array = dataset.ReadAsArray()
     return array
 
-
+array = None
 def imread(filename, flatten=True):
+    global array
     if filename.endswith(".raw"):
         array = open_raw(filename)
     else:

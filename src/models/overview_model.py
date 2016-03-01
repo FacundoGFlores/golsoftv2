@@ -10,10 +10,12 @@ from mayavi.core.ui.api import SceneEditor
 from mayavi.core.ui.mayavi_scene import MayaviScene
 from mayavi.tools.mlab_scene_model import MlabSceneModel
 
-from traits.api import HasTraits, Enum, Instance
+from traits.api import Button, HasTraits, Enum, Instance, PrototypedFrom
 from traitsui.api import View, Group, Item
 
 from ..controllers.overview import OverviewHandler
+
+from datainput_model import Datainput_model
 
 
 class Overview_model(HasTraits):

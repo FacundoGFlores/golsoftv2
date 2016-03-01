@@ -70,7 +70,7 @@ def get_initial_phase(hologram, wavelength=1):
 def get_inclined_plane(shape, cos_alpha, cos_beta, wavelength, (dx, dy)):
     wavenumber = tau / wavelength
 
-    rows, cols = shape 
+    rows, cols = shape
     row, col = np.ogrid[:rows:1., :cols:1.]
 
     inclined_plane = wavenumber * (cos_alpha * col * dx + cos_beta *
@@ -85,7 +85,7 @@ def get_refbeam(shape, cos_alpha, cos_beta, wavelength, (dx, dy)):
     """
     inclined_plane = get_inclined_plane(shape, cos_alpha, cos_beta, wavelength, (dx, dy))
     ref_beam = exp(1j * inclined_plane)
-    
+
     return ref_beam
 
 

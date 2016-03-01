@@ -6,9 +6,8 @@
 # Licencia: GNU/GPL V3 http://www.gnu.org/copyleft/gpl.html
 # Estado: Produccion
 
-from traits.api import HasTraits, Button, File
+from traits.api import HasTraits, Button, File, CList, Instance, PrototypedFrom
 from traitsui.api import View, Item, Group
-from traitsui.api import Handler
 
 from ..controllers.datainput import DatainputHandler
 
@@ -16,12 +15,20 @@ class Datainput_model(HasTraits):
     """ ModelView para el manejo de datos de los hologramas:
         Archivos de imagenes.
     """
+    filters = CList(
+        'All files (*.*)|*.*',
+        'PNG file (*.png)|*.png',
+        'GIF file (*.gif)|*.gif',
+        'JPG file (*.jpg)|*.jpg',
+        'JPEG file (*.jpeg)|*.jpeg'
+    )
+
     # Files
     holo_filename = File()
     ref_filename = File()
     obj_filename = File()
     # Botones
-    btn_update_hologram = Button("Actualizar holograma")
+    btn_update_hologram = Button("Actualizar holograma", filter = filters)
     btn_load_parameters = Button("Cargar")
     btn_save_parameters = Button("Guardar")
     # Groups
