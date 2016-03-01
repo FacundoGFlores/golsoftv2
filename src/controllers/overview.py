@@ -15,4 +15,4 @@ class OverviewHandler(Handler):
     """ Controlador para el ModelView: Overview
     """
     def object_overview_vismode_changed(self, info):
-        print "Updating overview"
+        print "Updating overview to: %s" % info.object.overview_vismode

@@ -231,7 +231,6 @@ class Golapp(HasTraits):
         self.color = "bone"
 
     def opt_spectrum(self):
-        print "Espectreando!!!"
         self.array = normalize(self.mask) + equalize(self.cnt_spectrum)
         self.color = "gist_stern"
 
@@ -296,14 +295,14 @@ class Golapp(HasTraits):
                     self.oview.scn_overview.mlab.surf(
                         self.array,
                         colormap=self.color,
-                        wrp_scale=wrp_scale,
+                        warp_scale=wrp_scale,
                         figure=self.oview.scn_overview.mayavi_scene
                     )
             else:
                 self.oview.plt_overview_surf.visible = True
                 self.oview.plt_overview_surf.mlab_source.lut_type = self.color
                 self.oview.plt_overview_surf.mlab_source.scalars = self.array
-                self.oview.plt_overview_surf.mlab_source.wrp_scale = wrp_scale
+                self.oview.plt_overview_surf.mlab_source.warp_scale = wrp_scale
 
     @on_trait_change("idata.btn_update_hologram")
     def update_hologram(self):
