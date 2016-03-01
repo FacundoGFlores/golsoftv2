@@ -6,32 +6,30 @@
 # Licencia: GNU/GPL V3 http://www.gnu.org/copyleft/gpl.html
 # Estado: Produccion
 
-from traits.api import Float, HasTraits, Str, Range, Enum, Bool
-from traits.api import Instance, PrototypedFrom, on_trait_change
-from traitsui.api import Item, HSplit, Group, View, Handler, Label, Tabbed
-
 import numpy as np
+from traits.api import (Bool, Enum, Float, HasTraits, Instance, PrototypedFrom,
+                        Range, Str, on_trait_change)
+from traitsui.api import Group, Handler, HSplit, Item, Label, Tabbed, View
 
-from lib.image import equalize, imread, normalize, subtract, phase_denoise
-from lib.image import limit_size
-from lib.color import guess_wavelength
-from lib.automask import get_auto_mask
 from lib.autofocus import guess_focus_distance
-from lib.propagation import get_propagation_array
-from lib.dft import get_shifted_idft, get_shifted_dft
-from lib.pea import calculate_director_cosines, get_refbeam
-from lib.pea import get_phase, get_module
-from lib.unwrap import unwrap_phasediff2
-from lib.unwrap import unwrap_qg, unwrap_wls, unwrap_cls, unwrap_pcg
+from lib.automask import get_auto_mask
+from lib.color import guess_wavelength
+from lib.dft import get_shifted_dft, get_shifted_idft
+from lib.image import (equalize, imread, limit_size, normalize, phase_denoise,
+                       subtract)
 from lib.minimize import get_fitted_paraboloid
-
+from lib.pea import (calculate_director_cosines, get_module, get_phase,
+                     get_refbeam)
+from lib.propagation import get_propagation_array
+from lib.unwrap import (unwrap_cls, unwrap_pcg, unwrap_phasediff2, unwrap_qg,
+                        unwrap_wls)
 from src.models.datainput_model import Datainput_model
 from src.models.extradata_model import Extradata_model
+from src.models.mask_model import Mask_model
 from src.models.overview_model import Overview_model
 from src.models.propagation_model import Propagation_model
-from src.models.mask_model import Mask_model
-from src.models.unwrap_model import Unwrap_model
 from src.models.refbeam_model import Refbeam_model
+from src.models.unwrap_model import Unwrap_model
 
 tau = 2 * np.pi
 
