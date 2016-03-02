@@ -283,7 +283,6 @@ class Golapp(HasTraits):
                 self.oview.plt_overview.mlab_source.lut_type = self.color
                 self.oview.plt_overview.mlab_source.scalars = self.array
         else:
-            print "Entered else"
             wrp_scale = 100 / self.array.ptp()
             if self.oview.plt_overview:
                 self.oview.plt_overview.visible = False
@@ -326,9 +325,7 @@ class Golapp(HasTraits):
         camera = self.edata.cameras[self.edata.camera]
         self.dx = eval(camera["dx"])
         self.dy = eval(camera["dy"])
-        print self.dx, self.dy
-        # TODO: Se debe establecer el tab para opciones de propagacion.
-        # self.update_propagation()
+        self.update_propagation()
 
     def update_mask_vis(self):
         if self.imask.mask_vismode == "hibryd":
