@@ -435,7 +435,7 @@ class Golapp(HasTraits):
         else:
             self.iunwr.plt_unwrapping.mlab_source.set(scalars=self.array)
 
-    @on_trait_change("iunwr.apping_method, iunwr.phase_denoise")
+    @on_trait_change("iunwr.unwrapping_method, iunwr.phase_denoise")
     def update_unwrapping_phase(self):
         if self.iunwr.use_unwrapping:
             print("Unwrapping phase")
