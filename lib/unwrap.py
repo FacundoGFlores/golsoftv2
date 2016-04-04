@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#-*- coding: UTF-8 -*-
+# -*- coding: UTF-8 -*-
 
 import cv2
 from bisect import insort
@@ -16,7 +16,7 @@ from image import get_subtract_paramns, normalize
 from autopipe import showimage
 
 pi = np.pi
-tau = np.pi * 2 # two times sexier than pi
+tau = np.pi * 2  # two times sexier than pi
 
 
 def get_aligned_phases(*phases):
@@ -62,41 +62,51 @@ def wrapped_gradient(phase):
 def fill_holes(array):
     array = array.copy()
     border = 3
-    extended = np.hstack((array[:, -border:], array, array[:, :border]))
-    extended = np.vstack((extended[-border:, :], extended, extended[:border, :]))
+    extended = np.hstack(
+        (array[:, -border:], array, array[:, :border])
+    )
+    extended = np.vstack(
+        (extended[-border:, :], extended, extended[:border, :])
+    )
 
     nans = zip(*np.where(np.isnan(array)))
-    print("Filling %d NaNs values with %d good data points." %
-        (len(nans), (array.size - len(nans))))
     for row, col in nans:
-        context = extended[row: row + 2 * border + 1,
-            col: col + 2 * border + 1]
+        row_end = row + 2 * border + 1
+        col_end = col + 2 * border + 1
+        context = extended[row: row_end, col: col_end]
         good_points = np.where(np.logical_not(np.isnan(context)))
         good_values = context[good_points]
 
-        new_value = griddata(good_points, good_values, (border, border),
-            method='cubic')
+        new_value = griddata(
+            good_points,
+            good_values,
+            (border, border),
+            method='cubic'
+        )
         array[row, col] = new_value
         extended[row + border, col + border] = new_value
 
     return array
 
+
 def Gradient(p1, p2):
+    """
     r = p1 - p2
     if r > np.pi:
         return r - 2 * np.pi
     if r < -np.pi:
         return r + 2 * np.pi
     return r
-
     """
+
     r = p1 - p2
     if r > 0.5:
         return r - 1.0
     if r < -0.5:
         return r + 1.0
     return r
-    """
+
+
 def SIMIN(x, y):
     if x*x < y*y:
         return x*x
@@ -109,6 +119,7 @@ def RemoveConstantBiasFrom(array, scale):
     avg *= scale
     array -= avg
 
+
 def DirectSolnByCosineTransform(phase, rows, cols):
     phase = phase.flatten('F').reshape((rows, cols), order='F')
     rows, cols = phase.shape
@@ -119,11 +130,26 @@ def DirectSolnByCosineTransform(phase, rows, cols):
     wcoldiff = wrapped_diff(phase, 1, 1, pi)
     wcoldiff = np.concatenate((wcoldiff, np.zeros((rows, 1))), 1)
 
-    rhox = np.diff(np.concatenate((np.zeros((1, cols)),
-        wrowdiff), 0), axis=0)
-    rhoy =np.diff(np.concatenate((np.zeros((rows, 1)),
-        wcoldiff), 1), axis=1)
-
+    rhox = np.diff(
+        np.concatenate(
+            (
+                np.zeros((1, cols)),
+                wrowdiff
+            ),
+            0
+        ),
+        axis=0
+    )
+    rhoy = np.diff(
+        np.concatenate(
+            (
+                np.zeros((rows, 1)),
+                wcoldiff
+            ),
+            1
+        ),
+        axis=1
+    )
     rho = rhox + rhoy
     dct = cv2.dct(rho)
 
@@ -139,13 +165,22 @@ def DirectSolnByCosineTransform(phase, rows, cols):
 
     return unwrapped
 
-def PCGIterate_NoWts(rarray, zarray, parray, soln, cols, rows,
-                iloop, sum0, alpha, beta, beta_prev, epsi):
 
-    scale = 1.0 / (rows * cols)
-    RemoveConstantBiasFrom(rarray, scale)
+def PCGIterate_NoWts(
+    rarray,
+    zarray,
+    parray,
+    soln,
+    iloop,
+    sum0,
+    alpha,
+    beta,
+    beta_prev,
+    epsi
+):
+
     zarray[:] = rarray
-    zarray = DirectSolnByCosineTransform(zarray, rows, cols)
+    zarray = unwrap_wls(zarray)
 
     zarray = zarray.flatten()
 
@@ -168,14 +203,14 @@ def PCGIterate_NoWts(rarray, zarray, parray, soln, cols, rows,
             k3 = k + cols if j < rows - 1 else k - cols
             k4 = k - cols if j > 0 else k + cols
 
-            w1 = w2 = w3 = w4 = 1.0
+            w1 = w2 = w3 = w4 = 1.0 # Unweigthed
 
-            A = (w1 + w2 + w3 + w4) * parray[k]
-            B = w1 * parray[k1] + w2 * parray[k2]
+            A = w1 * Gradient(parray[k], parray[k1])
+            B = w2 * Gradient(parray[k], parray[k2])
+            C = w3 * Gradient(parray[k], parra3[k1])
+            D = w4 * Gradient(parray[k], parra3[k4])
 
-            C = w3 * parray[k3] + w4 * parray[k4]
-            zarray[k] = A - (B + C)
-
+            zarray[k] = A + B + C + D
 
     alpha = np.dot(zarray, parray)
     alpha = beta / alpha
@@ -191,6 +226,7 @@ def PCGIterate_NoWts(rarray, zarray, parray, soln, cols, rows,
     return {'sum0': isum, 'alpha': alpha, 'beta': beta,
             'beta_prev': beta_prev, 'epsi': epsi}
 
+
 def PCGUnwrap_NoWts(r, cols, rows, max_iter, epsi_con):
     rarray = np.zeros_like(r)
     rarray[:] = r
@@ -199,24 +235,38 @@ def PCGUnwrap_NoWts(r, cols, rows, max_iter, epsi_con):
     soln = np.zeros_like(rarray)
 
     isum = np.dot(rarray, rarray)
-    isum = (isum / (cols * rows) )** 0.5
+    isum = (isum / (cols * rows)) ** 0.5
 
-    d = {'sum0': isum, 'alpha': 0, 'beta': 0, 'beta_prev': 0,
-            'epsi': 0}
+    d = {
+        'sum0': isum,
+        'alpha': 0,
+        'beta': 0,
+        'beta_prev': 0,
+        'epsi': 0
+    }
 
     for iloop in range(max_iter):
-        d = PCGIterate_NoWts(rarray, zarray, parray, soln, cols, rows,
-                        iloop, **d)
+        d = PCGIterate_NoWts(
+            rarray,
+            zarray,
+            parray,
+            soln,
+            iloop,
+            **d
+        )
         if d['epsi'] < epsi_con:
             print "Breaking out of main loop (due to convergence)\n"
             break
 
-    return soln.reshape(rows,cols).T
+    # return soln.reshape(rows,cols).T
+    return soln
+
 
 def unwrap_pcg(phase):
     rows = phase.shape[0]
     cols = phase.shape[1]
-    return PCGUnwrap_NoWts(phase.flatten(),rows, cols, 50, 0.00001)
+    return PCGUnwrap_NoWts(phase.flatten(), rows, cols, 50, 0.00001)
+
 
 def unwrap_wls(phase):
     """
@@ -231,10 +281,26 @@ def unwrap_wls(phase):
     wcoldiff = wrapped_diff(phase, 1, 1, pi)
     wcoldiff = np.concatenate((wcoldiff, np.zeros((rows, 1))), 1)
 
-    rhox = np.diff(np.concatenate((np.zeros((1, cols)),
-        wrowdiff), 0), axis=0)
-    rhoy =np.diff(np.concatenate((np.zeros((rows, 1)),
-        wcoldiff), 1), axis=1)
+    rhox = np.diff(
+        np.concatenate(
+            (
+                np.zeros((1, cols)),
+                wrowdiff
+            ),
+            0
+        ),
+        axis=0
+    )
+    rhoy = np.diff(
+        np.concatenate(
+            (
+                np.zeros((rows, 1)),
+                wcoldiff
+            ),
+            1
+        ),
+        axis=1
+    )
 
     rho = rhox + rhoy
     dct = get_sdct(rho)
@@ -252,19 +318,17 @@ def unwrap_wls(phase):
     return unwrapped
 
 
-
 def make_congruent(phase, unwrapped_phase):
     gradient = wrapped_diff(phase)
     gradient_unwrapped = wrapped_diff(unwrapped_phase)
     k = get_subtract_paramns(gradient, gradient_unwrapped)
 
     phase_diff = (phase - unwrapped_phase * k) / tau
-    phase_diff -= np.median(phase_diff) # cool
+    phase_diff -= np.median(phase_diff)  # cool
     phase_diff = np.round(phase_diff) * tau
 #    showimage(np.hstack((phase, unwrapped_phase * k, phase_diff)))
     congruent_phase = phase - phase_diff
     return congruent_phase
-
 
 
 def unwrap_cls(phase):
@@ -289,10 +353,26 @@ def unwrap_multiphase(*phases):
         wcoldiff = wrapped_diff(phase, 1, 1, pi)
         wcoldiff = np.concatenate((wcoldiff, np.zeros((rows, 1))), 1)
 
-        rhox = np.diff(np.concatenate((np.zeros((1, cols)),
-            wrowdiff), 0), axis=0)
-        rhoy =np.diff(np.concatenate((np.zeros((rows, 1)),
-            wcoldiff), 1), axis=1)
+        rhox = np.diff(
+            np.concatenate(
+                (
+                    np.zeros((1, cols)),
+                    wrowdiff
+                ),
+                0
+            ),
+            axis=0
+        )
+        rhoy = np.diff(
+            np.concatenate(
+                (
+                    np.zeros((rows, 1)),
+                    wcoldiff
+                ),
+                1
+            ),
+            axis=1
+        )
 
         rhos.append(rhox + rhoy)
 
@@ -342,13 +422,13 @@ def unwrap_qg(phase, quality_map):
         if col < (cols - 1):
             yield pos + 1
 
-    tams = [] #borrar
+    tams = []  # borrar
 
     phase = phase.ravel()
     adder = {}
-    quality_map = quality_map.ravel() #convierto la matriz en una lista 1D
-    first_pixel = quality_map.argmax() #el pixel con valor mas alto
-    border = blist() #array eficiente con bitflags - adjoin list
+    quality_map = quality_map.ravel()  # convierto la matriz en una lista 1D
+    first_pixel = quality_map.argmax()  # el pixel con valor mas alto
+    border = blist()  # array eficiente con bitflags - adjoin list
 
     for pos in get_neighbors(first_pixel):
         adder[pos] = phase[first_pixel]
@@ -358,7 +438,7 @@ def unwrap_qg(phase, quality_map):
         quality, pixel = border.pop()
         phase[pixel] -= round(phase[pixel] - adder[pixel])
 
-        #update the adjoin list
+        # update the adjoin list
         for pos in get_neighbors(pixel):
             if pos not in adder:
                 adder[pos] = phase[pixel]
@@ -381,7 +461,7 @@ def diff_match(phase1, phase2, threshold=np.pi/2.):
         var(diff(phase1) - diff(phase2 * k))
 
     """
-    #TODO: re-implement minimization
+    # TODO: re-implement minimization
 
     diffphase1 = wrapped_diff(phase1)
     diffphase2 = wrapped_diff(phase2)
@@ -422,15 +502,11 @@ def unwrap_phasediff2(phase1, phase2):
 
 
 def main():
-    from pea import PEA
-    from autopipe import showimage
-    pea = PEA()
-    pea.filename_holo = "../../../../documentos/carlos/enfused-sub/0427-0433-04X-568-c.tiff"
-    wg = wrapped_gradient(pea.phase)
-    showimage(wg)
-
-    return 0
+    wrapped_phase = np.load('/home/facu/wrapped_phase.npy')
+    unwrapped_phase = unwrap_wls(wrapped_phase)
+    print wrapped_phase.shape, type(wrapped_phase)
+    print unwrapped_phase.shape, type(unwrapped_phase)
 
 
 if __name__ == "__main__":
-    exit(main())
+    main()
