@@ -20,18 +20,14 @@ class Propagation_model(HasTraits):
     use_propagation = Bool(False)
     btn_guess_focus = Button("Guess focus distance")
     distance = Float(0)
-    btn_guess_focus = Button("Guess focus distance")
-    distance = Float(0)
 
     distance_m = Range(
         -0.50, 0.50, 0.,
-        mode="auto",
         enter_set=True,
         auto_set=False
     )
     distance_cm = Range(
         -5., 5., 0.,
-        mode="auto",
         enter_set=True,
         auto_set=False
     )

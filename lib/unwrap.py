@@ -178,7 +178,7 @@ def PCGIterate_NoWts(rarray, zarray, parray, soln, cols, rows,
     #RemoveConstantBiasFrom(parray, scale)
     beta_prev = beta
 
-    zarray = Compute_Laplacian(parray, cols, rows)
+    zarray = Compute_Laplacian(zarray, parray, cols, rows)
 
     alpha = np.dot(zarray, parray)
     alpha = beta / alpha

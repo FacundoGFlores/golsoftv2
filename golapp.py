@@ -305,6 +305,10 @@ class Golapp(HasTraits):
 
     @on_trait_change("idata.btn_update_hologram")
     def update_hologram(self):
+        print "Reading camera values"
+        camera = self.edata.cameras[self.edata.camera]
+        self.dx = eval(camera["dx"])
+        self.dy = eval(camera["dy"])
         print "Calculating hologram"
         self.update_holoimage()
         self.update_refimage()
@@ -322,6 +326,7 @@ class Golapp(HasTraits):
 
     @on_trait_change("edata.camera")
     def update_camera(self):
+        print "Reading camera values"
         camera = self.edata.cameras[self.edata.camera]
         self.dx = eval(camera["dx"])
         self.dy = eval(camera["dy"])
@@ -381,8 +386,11 @@ class Golapp(HasTraits):
             self.masked_spectrum = self.spectrum
 
     @on_trait_change("propa.distance_m, propa.distance_cm")
-    def compose_distance(self):
-        self.distance = self.propa.distance_m + self.propa.distance_cm / 100
+    def update_distance(self):
+        print "Updating distance"
+        self.propa.distance = self.propa.distance_m + self.propa.distance_cm / 100
+        self.update_propagation()
+
 
     @on_trait_change("btn_guess_focus")
     def guess_focus_distance(self):
@@ -467,13 +475,15 @@ class Golapp(HasTraits):
         edata.wavelength_nm"
     )
     def update_propagation(self):
+        print("Updating propagation")
+        print "Using (dx, dy):" + str(self.dx) + " " + str(self.dy)
         if self.propa.use_propagation:
-            print("Updating propagation")
+            print "Using propagation."
             self.propagation_array = get_propagation_array(
                 self.hologram.shape,
                 self.propa.distance,
                 self.edata.wavelength_nm * 1e-9,
-                (self.dx, self.dy)
+                self.dx, self.dy
             )
             self.propagated = self.propagation_array * self.masked_spectrum
         else:
