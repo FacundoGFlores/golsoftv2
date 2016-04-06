@@ -41,7 +41,7 @@ def get_lowpass_mask(shape, radius=0.2, softness=0):
 @methods
 def get_var(masked_spectrum, distance, wavelength, (dx, dy)):
     propagation_array = get_propagation_array(masked_spectrum.shape,
-        distance, wavelength, (dx, dy))
+        distance, wavelength, dx, dy)
     propagated = propagation_array * masked_spectrum
     reconstructed = get_shifted_idft(propagated)
     module = get_module(reconstructed)

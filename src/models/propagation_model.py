@@ -49,10 +49,7 @@ class Propagation_model(HasTraits):
     grp_propagation_parameters = Group(
         "use_propagation",
         Group(
-            Item(
-                "btn_guess_focus",
-                show_label=False
-            ),
+            "btn_guess_focus",
             "distance", "distance_m", "distance_cm",
             label="Propagation parameters",
             show_border=True

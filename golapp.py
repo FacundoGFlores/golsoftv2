@@ -174,7 +174,6 @@ class Golapp(HasTraits):
             grp_overview,
             Tabbed(
                 info_panel,
-                refbeam_panel,
                 mask_panel,
                 propagation_panel,
                 unwrap_panel
@@ -392,15 +391,17 @@ class Golapp(HasTraits):
         self.update_propagation()
 
 
-    @on_trait_change("btn_guess_focus")
+    @on_trait_change("propa.btn_guess_focus")
     def guess_focus_distance(self):
+        "Guessing distance"
         self.wavelength = self.edata.wavelength_nm * 1e-9
         self.masked_spectrum = get_auto_mask(self.spectrum)[1]
-        self.distance = guess_focus_distance(
+        self.propa.distance = guess_focus_distance(
             self.masked_spectrum,
             self.wavelength,
             (self.dx, self.dy)
         )
+        self.update_propagation()
 
     @on_trait_change("propagation_vismode")
     def update_propagation_vis(self):
@@ -470,9 +471,9 @@ class Golapp(HasTraits):
             self.update_overview_vis()
 
     @on_trait_change(
-        "propa.propagation_vismode, \
-        propa.distance, \
-        edata.wavelength_nm"
+        [propa.propagation_vismode,
+        propa.distance,
+        edata.wavelength_nm]
     )
     def update_propagation(self):
         print("Updating propagation")
