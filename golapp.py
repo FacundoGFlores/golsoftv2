@@ -471,9 +471,9 @@ class Golapp(HasTraits):
             self.update_overview_vis()
 
     @on_trait_change(
-        [propa.propagation_vismode,
-        propa.distance,
-        edata.wavelength_nm]
+        "propa.propagation_vismode, \
+        propa.distance,\
+        edata.wavelength_nm"
     )
     def update_propagation(self):
         print("Updating propagation")
