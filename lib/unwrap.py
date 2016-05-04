@@ -139,7 +139,8 @@ def DirectSolnByCosineTransform(phase, rows, cols):
 
     return unwrapped
 
-def Compute_Laplacian(zarray, parray, cols, rows):
+def ComputeLaplacian(phase, wts, cols, rows):
+    laplacian = np.zeros_like(input_map)
     for j in range(rows):
         for i in range(cols):
             k = j * rows + i
@@ -148,22 +149,28 @@ def Compute_Laplacian(zarray, parray, cols, rows):
             k2 = k - 1 if i > 0 else k + 1
             k3 = k + cols if j < rows - 1 else k - cols
             k4 = k - cols if j > 0 else k + cols
+            if wts == None:
+                w1 = 1.0
+                w2 = 1.0
+                w3 = 1.0
+                w4 = 1.0
+            else:
+                w1 = SIMIN(wts[k], wts[k1])
+                w2 = SIMIN(wts[k], wts[k2])
+                w3 = SIMIN(wts[k], wts[k3])
+                w4 = SIMIN(wts[k], wts[k4])
+            # Compute wrapped phase laplacian
+            p1 = w1 * Gradient(phase[k], phase[k1])
+            p2 = w2 * Gradient(phase[k], phase[k2])
+            p3 = w3 * Gradient(phase[k], phase[k3])
+            p4 = w4 * Gradient(phase[k], phase[k4])
+            laplacian[k] = p1 + p2 + p3 + p4
 
-            w1 = w2 = w3 = w4 = 1.0 # Unweigthed
-
-            A = w1 * Gradient(parray[k], parray[k1])
-            B = w2 * Gradient(parray[k], parray[k2])
-            C = w3 * Gradient(parray[k], parray[k1])
-            D = w4 * Gradient(parray[k], parray[k4])
-
-            zarray[k] = A + B + C + D
-    return zarray
-
-def PCGIterate_NoWts(rarray, zarray, parray, soln, cols, rows,
+def PCGIterate(rarray, zarray, parray, qual_map, soln, cols, rows,
                 iloop, sum0, alpha, beta, beta_prev, epsi):
 
-    scale = 1.0 / (rows * cols)
-    #RemoveConstantBiasFrom(rarray, scale)
+    # scale = 1.0 / (rows * cols)
+    # RemoveConstantBiasFrom(rarray, scale)
     zarray[:] = rarray
     zarray = DirectSolnByCosineTransform(zarray, rows, cols)
     zarray = zarray.flatten()
@@ -175,10 +182,27 @@ def PCGIterate_NoWts(rarray, zarray, parray, soln, cols, rows,
     else:
         btemp = beta / beta_prev
         parray[:] = zarray + btemp * parray
-    #RemoveConstantBiasFrom(parray, scale)
+    # RemoveConstantBiasFrom(parray, scale)
     beta_prev = beta
 
-    zarray = Compute_Laplacian(zarray, parray, cols, rows)
+    for j in range(rows):
+        for i in range(cols):
+            k = j * rows + i
+
+            k1 = k + 1 if i < cols - 1 else k - 1
+            k2 = k - 1 if i > 0 else k + 1
+            k3 = k + cols if j < rows - 1 else k - cols
+            k4 = k - cols if j > 0 else k + cols
+
+            w1 = w2 = w3 = w4 = 1.0 # Unweigthed
+
+            p0 = (w1 + w2 + w3 + w4) * parray[k]
+            p1 = w1 * parray[k1]
+            p2 = w2 * parray[k2]
+            p3 = w3 * parray[k3]
+            p4 = w4 * parray[k4]
+
+            zarray[k] = p0 - (p1 + p2 + p3 + p4)
 
     alpha = np.dot(zarray, parray)
     alpha = beta / alpha
@@ -194,7 +218,7 @@ def PCGIterate_NoWts(rarray, zarray, parray, soln, cols, rows,
     return {'sum0': isum, 'alpha': alpha, 'beta': beta,
             'beta_prev': beta_prev, 'epsi': epsi}
 
-def PCGUnwrap_NoWts(r, cols, rows, max_iter, epsi_con):
+def PCGUnwrap(r, qual_map, cols, rows, max_iter, epsi_con):
     rarray = np.zeros_like(r)
     rarray[:] = r
     zarray = np.zeros_like(rarray)
@@ -208,7 +232,7 @@ def PCGUnwrap_NoWts(r, cols, rows, max_iter, epsi_con):
             'epsi': 0}
 
     for iloop in range(max_iter):
-        d = PCGIterate_NoWts(rarray, zarray, parray, soln, cols, rows,
+        d = PCGIterate(rarray, zarray, parray, qual_map, soln, cols, rows,
                         iloop, **d)
         if d['epsi'] < epsi_con:
             print "Breaking out of main loop (due to convergence)\n"
@@ -216,10 +240,10 @@ def PCGUnwrap_NoWts(r, cols, rows, max_iter, epsi_con):
 
     return soln.reshape(rows,cols).T
 
-def unwrap_pcg(phase):
+def unwrap_pcg(phase, qual_map=None):
     rows = phase.shape[0]
     cols = phase.shape[1]
-    return PCGUnwrap_NoWts(phase.flatten(),rows, cols, 50, 0.00001)
+    return PCGUnwrap(phase.flatten(), qual_map, rows, cols, 50, 0.00001)
 
 def unwrap_wls(phase):
     """
