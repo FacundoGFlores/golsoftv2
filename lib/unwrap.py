@@ -88,8 +88,8 @@ def Gradient(p1, p2):
     if r < -np.pi:
         return r + 2 * np.pi
     return r
-
     """
+
     r = p1 - p2
     if r > 0.5:
         return r - 1.0
@@ -97,6 +97,7 @@ def Gradient(p1, p2):
         return r + 1.0
     return r
     """
+
 def SIMIN(x, y):
     if x*x < y*y:
         return x*x
@@ -139,8 +140,8 @@ def DirectSolnByCosineTransform(phase, rows, cols):
 
     return unwrapped
 
-def ComputeLaplacian(phase, wts, cols, rows):
-    laplacian = np.zeros_like(input_map)
+def ComputeLaplacian(phase, wts, rows, cols):
+    laplacian = np.zeros_like(phase)
     for j in range(rows):
         for i in range(cols):
             k = j * rows + i
@@ -149,7 +150,7 @@ def ComputeLaplacian(phase, wts, cols, rows):
             k2 = k - 1 if i > 0 else k + 1
             k3 = k + cols if j < rows - 1 else k - cols
             k4 = k - cols if j > 0 else k + cols
-            if wts == None:
+            if not isinstance(wts, np.ndarray):
                 w1 = 1.0
                 w2 = 1.0
                 w3 = 1.0
@@ -165,7 +166,7 @@ def ComputeLaplacian(phase, wts, cols, rows):
             p3 = w3 * Gradient(phase[k], phase[k3])
             p4 = w4 * Gradient(phase[k], phase[k4])
             laplacian[k] = p1 + p2 + p3 + p4
-
+    return laplacian
 def PCGIterate(rarray, zarray, parray, qual_map, soln, cols, rows,
                 iloop, sum0, alpha, beta, beta_prev, epsi):
 
@@ -241,9 +242,14 @@ def PCGUnwrap(r, qual_map, cols, rows, max_iter, epsi_con):
     return soln.reshape(rows,cols).T
 
 def unwrap_pcg(phase, qual_map=None):
+    print qual_map
+    quit()
     rows = phase.shape[0]
     cols = phase.shape[1]
-    return PCGUnwrap(phase.flatten(), qual_map, rows, cols, 50, 0.00001)
+    rarray = ComputeLaplacian(phase.flatten(), qual_map.flatten(), rows, cols)
+    print phase.flatten()
+    print rarray
+    return PCGUnwrap(rarray, qual_map.flatten(), rows, cols, 50, 0.00001)
 
 def unwrap_wls(phase):
     """

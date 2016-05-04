@@ -454,7 +454,10 @@ class Golapp(HasTraits):
             )
             method = self.iunwr.unwrapping_method
             if method == "PCG":
-                self.unwrapped_phase = unwrap_pcg(self.wrapped_phase)
+                self.unwrapped_phase = unwrap_pcg(
+                    self.wrapped_phase,
+                    np.abs(self.wrapped_phase)
+                )
             if method == "Congruent Least Squares":
                 self.unwrapped_phase = unwrap_cls(self.wrapped_phase)
             if method == "Least Squares":
